@@ -85,11 +85,11 @@ function shareStatus($status_text,$ssid)
 	global $api_key,$api_secret,$admin_token,$token_secret;
 	if($ssid!=session_id()) return 0;
 	$connection=new TwitterOAuth($api_key,$api_secret,$admin_token,$token_secret);
-	$connection->format='xml';
 	$token=$_SESSION['oauth_token'];
 	$result=$connection->post('statuses/update',array('status' => $status_text));
+	$id=$results->id_str;
+	RetweetStatus($id);
 	echo $result;
-
 }
 
 function AuthRedirect()
@@ -125,6 +125,23 @@ function AuthCallback()
 		echo '<script>window.location.href="'.$url.'/twitter-login.php?action=showsharebox"</script>';
 	}	
 }
+function RetweetStatus($id)
+{
+	global $api_key,$api_secret;
+	$users=get_all_users();
+	$index=0;
+	while($users[$index])
+	{
+		$access_token=$users[$index]->oauth_token;
+		$token_secret=$users[$index]->token_secret;
+		$connection=new TwitterOAuth($api_key,$api_secret,$access_token,$token_secret);
+		$connection->format='xml';
+		$token=$_SESSION['oauth_token'];
+		$result=$connection->post('statuses/retweet/'.$id,array('id' => $id));
+		$index++;
+		echo $result;
+	}
+}
 
 function setCurrentUser($id)
 {
@@ -158,6 +175,9 @@ switch($action)
 		break;
 	case 'signout':
 		sign_out($_POST['ssid']);
+		break;
+	case 'retweet':
+		RetweetStatus(0);
 		break;
 }
 ?>

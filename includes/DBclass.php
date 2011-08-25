@@ -57,16 +57,19 @@ class user
 	}
 	function get_all_users()
 	{
-		$query="SELECT * FROM users WHERE '1' = '1'";
+		$query="SELECT * FROM users";
 		$results=db_query($query);
-		$array=null;
+		$array=array();
 		if($results)
-		while($row=mysql_fetch_array($results))
 		{
-			$user=new user($row['user_id'],$row['screen_name'],$row['access_token'],$row['token_secret']);
-			array_push($array,$user);
+			while($row=mysql_fetch_array($results))
+			{
+				$user=new user($row['twitter_id'],$row['screen_name'],$row['access_token'],$row['token_secret']);
+				array_push($array,$user);
+			}
+			return $array;
 		}
-		return $array;
+		else return 0;
 	}
 	function add_user($twitter_id,$screen_name,$access_token,$token_secret)
 	{
