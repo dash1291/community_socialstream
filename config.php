@@ -3,9 +3,9 @@ $db_host="localhost";
 $db_user="root";
 $db_pass="";
 $db_name="test";
-$api_key='apikey';
-$api_secret='apisecret';
-$admin_token='admintoken';
-$token_secret='tokensecret';
+$api_key='IPs4LAerAqSybJB9uOJ0A';
+$api_secret='pQngKocjGAp2FnTMly4GEMr8wc0Khu0ko9QhlEQSHI';
+$admin_token='283158873-tytTGKBgou4UhTQbm3Y6veTMu0uGxi15Vazg7R7A';
+$token_secret='c86bn4b3DWqHBsUbRKsO6bmdGXvi17WXMZxgc3iAGM';
 $url="http://localhost/socialstream"
 ?>

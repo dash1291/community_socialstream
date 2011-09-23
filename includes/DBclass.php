@@ -25,6 +25,7 @@ class user
 			$results=mysql_query($query);
 		}
 		if(!$results) return 0;
+		mysql_close($con);
 		return $results;
 	}
 
