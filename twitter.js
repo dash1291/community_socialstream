@@ -41,9 +41,9 @@ function makeShareRequest()
 {
 	text=document.getElementById("status-text").value;
 	ssid=document.getElementById("session-id").value;
-	$.post("twitter-login.php",{action:"share",status:text,ssid:ssid},function()
+	$.post("twitter-login.php",{action:"share",status:text,ssid:ssid},function(data)
 		{
-			
+			alert(data);			
 		});
 }
 function sign_out()
@@ -55,3 +55,4 @@ function sign_out()
 			window.location.href=url;
 		});
 }
+

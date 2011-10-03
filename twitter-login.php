@@ -84,12 +84,20 @@ function shareStatus($status_text,$ssid)
 {
 	global $api_key,$api_secret,$admin_token,$token_secret;
 	if($ssid!=session_id()) return 0;
+	if($current_user->id!=0) return 0;
 	$connection=new TwitterOAuth($api_key,$api_secret,$admin_token,$token_secret);
 	$token=$_SESSION['oauth_token'];
 	$result=$connection->post('statuses/update',array('status' => $status_text));
 	$id=$results->id_str;
 	RetweetStatus($id);
 	echo $result;
+}
+
+function createStatus($status_text,$ssid)
+{
+	global $api_key,$api_secret,$admin_token,$token_secret,$user;
+	if($ssid!=session_id()) return 0;
+	create_status_entry($status_text,$user->twitter_id);
 }
 
 function AuthRedirect()
@@ -154,34 +162,40 @@ function sign_out($ssid)
 	session_destroy();
 
 }
-	
-$action=$_REQUEST['action'];
-switch($action)
+function get_picture($screen_name)
 {
-	case 'auth':
-		AuthRedirect();
-		break;
-	case 'callback':
-		AuthCallback();
-		break;
-	case 'share':
-		shareStatus($_POST['status'],$_POST['ssid']);
-		break;
-	case 'showloginlink':
-		getLoginLink();
-		break;
-	case 'showsharebox':
-		getShareBox();
-		break;
-	case 'signout':
-		sign_out($_POST['ssid']);
-		break;
-	case 'retweet':
-		RetweetStatus(0);
-		break;
+	return "http://api.twitter.com/1/users/profile_image?screen_name=".$screen_name."&size=bigger";
+}
+if(isset($_REQUEST['action']))
+{
+	$action=$_REQUEST['action'];
+	switch($action)
+	{
+		case 'auth':
+			AuthRedirect();
+			break;
+		case 'callback':
+			AuthCallback();
+			break;
+		case 'share':
+			createStatus($_POST['status'],$_POST['ssid']);
+			break;
+		case 'showloginlink':
+			getLoginLink();
+			break;
+		case 'showsharebox':
+			getShareBox();
+			break;
+		case 'signout':
+			sign_out($_POST['ssid']);
+			break;
+		case 'retweet':
+			RetweetStatus(0);
+			break;
+	}
 }
 ?>
-	</div>
+	
 	</body>
 </html>
 
