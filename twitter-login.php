@@ -7,40 +7,57 @@ if(isset($_SESSION['current_user']))
 {
 	$user=get_user_by_id($_SESSION['current_user']);
 }
+else
+{
+	if($_GET['action']!="showloginlink") header("Location: $url");
+}
+function markup_head()
+{
+global $user,$url;
 ?>
 <!DOCTYPE html>
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="http://twitter.github.com/bootstrap/assets/css/bootstrap-1.0.0.min.css">
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+	<script type="text/javascript" src="http://fgnass.github.com/spin.js/spin.min.js"></script>
+	<script type="text/javascript" src="http://twitter.github.com/bootstrap/1.3.0/bootstrap-dropdown.js"></script>
 		<script type="text/javascript" src="twitter.js"></script>
 		<title>Social Stream</title>
 	</head>
 	<body>
 	<input type="hidden" id="url" value="<?php echo $url;?>"/>
-	<div class="topbar"> 
+	<input type="hidden" id="session-id" value="<?php echo session_id();?>"/>
+	<div class="topbar" id="topbar"> 
       <div class="container fixed"> 
         <h3><a class="logo" href="">Twitter Stream</a></h3>
         <ul> 
-          <li id="view-link" class="active"><a class="nav-link" href="#">View Stream</a></li> 
-          <li id="share-link"><a class="nav-link" href="#">Share Something</a></li>
+	<?php if(isset($user))
+		{
+		?>
+          <li id="share-link"><a class="nav-link" href="<?php echo $url?>">Share Something</a></li>
+	  	<?php if(is_admin($user))
+	  		{
+	  		?>
+          			<li id="admin-link"><a class="nav-link" href="<?php echo $url.'/admin.php'?>">Admin Panel</a></li>
+			<?php
+			}
+		}
+
+		?>
         </ul> 
         <?php 
 		if(isset($user)) 
 			{
-				?> 
-        <ul class="nav secondary-nav"> 
-          <li class="menu"> 
-            
-			<a href="#" class="menu"><?php echo $user->screen_name;?></a> 
-	
-            <ul class="menu-dropdown"> 
-              <li><a id="sign-out-link" href="#">Sign Out</a></li> 
-              
-            </ul> 
-          </li> 
-        </ul> 
-				<?php
+			?>
+	 <ul class="nav secondary-nav"> 
+	 	<li class="menu"> 
+			<a href="#" class="menu"><?php echo $user->screen_name;?></a>	            
+			<ul class="menu-dropdown"> 
+				<li><a id="sign-out-link" href="#">Sign Out</a></li> 			
+			</ul> 														</li> 
+	 </ul> 
+			<?php
 			}
 		?>
       </div> 
@@ -48,49 +65,66 @@ if(isset($_SESSION['current_user']))
 		<div class="container">
 			<img src="logo_WP2.png"/>
 <?php
-function getLoginLink()
+}
+function getLoginLink($redirect)
 {
-	global $api_key,$api_secret,$url;
-	
+	global $api_key,$api_secret,$url;	
 	$connection=new TwitterOAuth($api_key,$api_secret);
-	$temporary_credentials=$connection->getRequestToken($url.'/twitter-login.php?action=callback');
+	$temporary_credentials=$connection->getRequestToken($url.'/twitter-login.php?action=callback&redirect='.$redirect);
 	$_SESSION['oauth_token']=$token=$temporary_credentials['oauth_token'];
 	$_SESSION['oauth_token_secret']=$temporary_credentials['oauth_token_secret'];
 	$redirect_url=$connection->getAuthorizeURL($temporary_credentials);
-	?>
+	echo $redirect_url;
+}
+function showLoginLink()
+{
+?>		
 	<div>
 		<h1>Share. Spread Your Voice.</h1>
 		<h1><small>You're not signed in</small></h1>
-		<a class="btn large primary" href="<?php echo $redirect_url ?>">Sign in with Twitter</a>
+		<a class="btn large primary" href="<?php getLoginLink("") ?>">Sign in with Twitter</a>
 	</div>
-	<?php
+<?php
 }
-
 function getShareBox()
 {
+	global $url;
 	?>
-	
+<div id="sharebox">	
 	<form>
 		<h1><small>Go share something...</small></h1>
 		<textarea rows="5" cols="1000" id="status-text"></textarea>
-		<p><input type="button" value="Share" class="btn primary" id="share-button"/></p>
-		<input type="hidden" id="session-id" value="<?php echo session_id();?>"/>
+		<p><input type="button" value="Share" style="margin-right:20px;" class="btn primary" id="share-button"/><img src="<?php echo $url?>/load.gif" id="spinner"/></p>
 	</form>
+
+<script>
+	share_spinner();
+</script>
+</div>
 	<?php
 	//TODO:: display share box form markup
 }
 
-function shareStatus($status_text,$ssid)
+function shareStatus($id,$ssid)
 {
-	global $api_key,$api_secret,$admin_token,$token_secret;
+	global $api_key,$api_secret,$user;
 	if($ssid!=session_id()) return 0;
-	if($current_user->id!=0) return 0;
-	$connection=new TwitterOAuth($api_key,$api_secret,$admin_token,$token_secret);
+	if(!is_admin($user)) return 0;
+	$status_text=get_status_text($id);
+	$admin=get_admin_user();
+	$connection=new TwitterOAuth($api_key,$api_secret,$admin->access_token,$admin->token_secret);
 	$token=$_SESSION['oauth_token'];
 	$result=$connection->post('statuses/update',array('status' => $status_text));
-	$id=$results->id_str;
-	RetweetStatus($id);
-	echo $result;
+	if(!isset($result->id_str)) {echo "FAIL" ; die;}
+	delete_status($id);
+	echo $result->id_str;
+}
+function deleteStatus($id,$ssid)
+{
+	global $user;
+	if($ssid!=session_id())return 0;
+	if(!is_admin($user)) return 0;
+	delete_status($id);
 }
 
 function createStatus($status_text,$ssid)
@@ -111,27 +145,26 @@ function AuthRedirect()
 	header('Location: '.$redirect_url);
 }
 
-function AuthCallback()
+function AuthCallback($redirect)
 {
-	global $api_key,$api_secret,$url;
+	global $api_key,$api_secret,$url,$user;
 	$connection=new TwitterOAuth($api_key,$api_secret,$_REQUEST['oauth_token'],$_SESSION['oauth_token_secret']);
 	$token=$_SESSION['oauth_token'];
 	$token_credentials=$connection->getAccessToken($_REQUEST['oauth_verifier']);
 	$response=$connection->get('account/verify_credentials');
 	$id=$response->id;
 	$screen_name=$response->screen_name;
-	$user=get_user_by_id($id);
-	if(!$user) 
+	$auth_user=get_user_by_id($id);
+	if(!$auth_user) 
 	{
-		add_user($id,$screen_name,$token_credentials['oauth_token'],$token_credentials['oauth_token_secret']);
-		setCurrentUser($id);
-		echo '<script>window.location.href="'.$url.'/twitter-login.php?action=showsharebox"</script>';
+		$auth_user=add_user($id,$screen_name,$token_credentials['oauth_token'],$token_credentials['oauth_token_secret']);
 	}
-	else 
+	if(strpos($redirect,"admin.php")>=0)
 	{
-		setCurrentUser($id);
-		echo '<script>window.location.href="'.$url.'/twitter-login.php?action=showsharebox"</script>';
-	}	
+		if(is_admin($user)) {set_admin($auth_user);}
+	}
+	setCurrentUser($id);
+	echo '<script>window.location.href="'.$url.'/'.$redirect.'"</script>';
 }
 function RetweetStatus($id)
 {
@@ -175,16 +208,20 @@ if(isset($_REQUEST['action']))
 			AuthRedirect();
 			break;
 		case 'callback':
-			AuthCallback();
+			AuthCallback($_GET['redirect']);
 			break;
 		case 'share':
 			createStatus($_POST['status'],$_POST['ssid']);
 			break;
 		case 'showloginlink':
-			getLoginLink();
+			markup_head();
+			showLoginLink();
+			markup_foot();
 			break;
 		case 'showsharebox':
+			markup_head();
 			getShareBox();
+			markup_foot();
 			break;
 		case 'signout':
 			sign_out($_POST['ssid']);
@@ -192,10 +229,20 @@ if(isset($_REQUEST['action']))
 		case 'retweet':
 			RetweetStatus(0);
 			break;
+		case 'publish':
+			shareStatus($_POST['id'],$_POST['ssid']);
+			break;
+		case 'delete':
+			deleteStatus($_POST['id'],$_POST['ssid']);
+			break;
+
 	}
 }
+function markup_foot()
+{
 ?>
-	
 	</body>
 </html>
-
+<?php
+}
+?>

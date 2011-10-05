@@ -1,12 +1,23 @@
 <?php
 include dirname(__FILE__).'/twitter-login.php';
+markup_head();
+if(!is_admin($user)) {
+echo "<h2>Sorry, this place is for the admin only.</h2>";
+markup_foot();
+die;
+}
 function loadAccountSettings()
 {	
 	$user=get_admin_user();
 	$image_url=get_picture($user->screen_name);
 	?>
+	<h3>Admin Account</h3>
 	<div class="well">
+		<div style="margin-left:25%" id="account-container">
 		<img style="float:left;margin-right:10px" src="<?php echo $image_url?>"/>
+		<a href="http://twitter.com/<?php echo $user->screen_name?>"><h3>@<?php echo $user->screen_name?></h3></a>		
+		<div style="clear:right"><h3 style="float:left;margin-right:10px;"><small>Use a different account? </small></h3><a class="btn large primary" href="<?php getLoginLink("admin.php?mode=account")?>">Sign in with Twitter</a>
+		</div>
 	</div>
 	<?php
 	//TODO::account settings markup
@@ -26,7 +37,7 @@ function loadGlobalSettings()
 }
 function loadStatuses()
 {
-	global $user;
+	global $user,$url;
 	$statuses=get_statuses();
 	foreach($statuses as $status)
 	{
@@ -34,68 +45,28 @@ function loadStatuses()
 		$author=get_user_by_id($status['author']);
 		$image_url=get_picture($author->screen_name);
 		?>
-		<div class="well status-item">
+		<div class="well status-item" id="<?php echo $status['ID']?>">
 			<img style="float:left;margin-right:10px" class="thumbnail user-pic" src="<?php echo $image_url?>"/>
-			<a href="http://twitter.com/<?php echo $author->screen_name?>">	<h3 class="user-name"><?php echo $author->screen_name?></h3></a>
+			<a href="http://twitter.com/<?php echo $author->screen_name?>"><h3 class="user-name">@<?php echo $author->screen_name?></h3></a>
 			<p class="status-text"><?php echo $status['text'] ?></p>
-			<button class="btn success" id="btn_publish">Publish</button>
-			<button class="btn danger" id="btn_delete">Delete</button>
+			<br/>
+			<p style="clear:both"><button class="btn success publish">Publish</button>
+			<button class="btn danger delete" style="margin-right:20px;">Delete</button><img class="spinner" src="<?php echo $url?>/load.gif"/></p>
 		</div>
 		<?php
 		//prepare markup
 	}
+	?>
+
+		<script>
+			admin_spinner();
+		</script>
+	<?php
 	//TODO::load statuses
 	//load pending statuses from DB
 	//ask for moderation
 }
 
-?>
-<!--<!DOCTYPE html>
-<html>
-	<head>
-		<link rel="stylesheet" type="text/css" href="http://twitter.github.com/bootstrap/assets/css/bootstrap-1.0.0.min.css">
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
-		<script type="text/javascript" src="http://twitter.github.com/bootstrap/1.3.0/bootstrap-tabs.js"></script>
-		<script type="text/javascript">
-			$(document).ready(function(){
-				$(".tabs").tabs();
-			});
-		</script>
-		<title>Social Stream</title>
-	</head>
-	<body>
-<div class="topbar"> 
-      <div class="container fixed">
-        <h3><a class="logo" href="">Twitter Stream</a></h3>
-        <ul> 
-          <li id="view-link" class="active"><a class="nav-link" href="#">View Stream</a></li> 
-          <li id="share-link"><a class="nav-link" href="#">Share Something</a></li>
-        </ul> 
-        <?php 
-		if(isset($user)) 
-			{
-				?> 
-        <ul class="nav secondary-nav"> 
-          <li class="menu"> 
-            
-			<a href="#" class="menu"><?php echo $user->screen_name;?></a> 
-	
-            <ul class="menu-dropdown"> 
-              <li><a id="sign-out-link" href="#">Sign Out</a></li> 
-              
-            </ul> 
-          </li> 
-        </ul> 
-				<?php
-			}
-		?>
-      </div> 
-    </div> <br/><br/><br/>
-		<div class="container">
-			<img src="logo_WP2.png"/>
-			-->
-
-<?php
 if(isset($_GET['mode'])) $mode=$_GET['mode'];
 else $mode='statuses';
 

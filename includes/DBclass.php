@@ -102,10 +102,42 @@ function create_status_entry($status_text,$userid)
 }	
 function get_admin_user()
 {
-	$query="SELECT * FROM users WHERE ID = '1'";
+	$query="SELECT * FROM options WHERE option_name = 'admin'";
+	$results=db_query($query);
+	$row=mysql_fetch_array($results);
+	$admin_id=$row['value'];
+	$query="SELECT * FROM users WHERE twitter_id = '$admin_id'";
 	$results=db_query($query);
 	$row=mysql_fetch_array($results);
 	$user=new user($row['twitter_id'],$row['screen_name'],$row['access_token'],$row['token_secret']);
 	return $user;
+}
+function delete_status($id)
+{
+	$query="DELETE FROM statuses WHERE ID = '$id'";
+	db_query($query);
+}
+function is_admin($user)
+{
+	$twid=$user->twitter_id;
+	$query="SELECT * FROM options WHERE option_name = 'admin'";
+	$results=db_query($query);
+	$row=mysql_fetch_array($results);
+	$admin_id=$row['value'];
+	if($admin_id!=$twid) return false;
+	return true;
+}
+function set_admin($user)
+{
+	$id=$user->twitter_id;
+	$query="UPDATE options SET value = '$id' WHERE option_name = 'admin'";
+	db_query($query);
+}
+function get_status_text($id)
+{
+	$query="SELECT * FROM statuses WHERE ID = '$id'";
+	$results=db_query($query);
+	$row=mysql_fetch_array($results);
+	return $row['text'];
 }
 ?>
