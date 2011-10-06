@@ -9,7 +9,7 @@ if(isset($_SESSION['current_user']))
 }
 else
 {
-	if($_GET['action']!="showloginlink") header("Location: $url");
+	if(!isset($_GET['action'])) header("Location: $url");
 }
 function markup_head()
 {
@@ -161,7 +161,10 @@ function AuthCallback($redirect)
 	}
 	if(strpos($redirect,"admin.php")>=0)
 	{
-		if(is_admin($user)) {set_admin($auth_user);}
+		$admin=get_admin_user();
+		if($admin==0){set_admin($auth_user,1);} 
+	
+		elseif(is_admin($user)) {set_admin($auth_user);}
 	}
 	setCurrentUser($id);
 	echo '<script>window.location.href="'.$url.'/'.$redirect.'"</script>';
@@ -204,6 +207,9 @@ if(isset($_REQUEST['action']))
 	$action=$_REQUEST['action'];
 	switch($action)
 	{
+		case 'getloginlink':
+			getLoginLink($_GET['redirect']);
+			break;
 		case 'auth':
 			AuthRedirect();
 			break;

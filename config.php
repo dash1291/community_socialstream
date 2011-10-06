@@ -1,9 +1,1 @@
-<?php
-$db_host="localhost";
-$db_user="root";
-$db_pass="";
-$db_name="test";
-$api_key='IPs4LAerAqSybJB9uOJ0A';
-$api_secret='pQngKocjGAp2FnTMly4GEMr8wc0Khu0ko9QhlEQSHI';
-$url="http://localhost/socialstream"
-?>
+<?php $db_pass="";$db_user="root";$db_host="localhost";$db_name="test";$api_key="IPs4LAerAqSybJB9uOJ0A";$api_secret="pQngKocjGAp2FnTMly4GEMr8wc0Khu0ko9QhlEQSHI";$url="http://localhost/socialstream";?>

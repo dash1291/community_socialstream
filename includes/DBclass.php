@@ -76,6 +76,8 @@ function add_user($twitter_id,$screen_name,$access_token,$token_secret)
 {
 	$query="INSERT INTO users (screen_name, twitter_id, access_token, token_secret) VALUES ('$screen_name', '$twitter_id', '$access_token', '$token_secret')";
 	db_query($query);
+	$user=new user($twitter_id,$screen_name,$access_token,$token_secret);
+	return $user;
 }
 function get_statuses()
 {
@@ -105,6 +107,7 @@ function get_admin_user()
 	$query="SELECT * FROM options WHERE option_name = 'admin'";
 	$results=db_query($query);
 	$row=mysql_fetch_array($results);
+	if(!$row) return 0;
 	$admin_id=$row['value'];
 	$query="SELECT * FROM users WHERE twitter_id = '$admin_id'";
 	$results=db_query($query);
@@ -127,11 +130,19 @@ function is_admin($user)
 	if($admin_id!=$twid) return false;
 	return true;
 }
-function set_admin($user)
+function set_admin($user,$first_time=0)
 {
 	$id=$user->twitter_id;
-	$query="UPDATE options SET value = '$id' WHERE option_name = 'admin'";
-	db_query($query);
+	if($first_time!=0)
+	{
+		$query="INSERT INTO options (option_name,value) VALUES ('admin','$id')";
+		db_query($query);
+	}
+	else
+	{
+		$query="UPDATE options SET value = '$id' WHERE option_name = 'admin'";
+		db_query($query);
+	}
 }
 function get_status_text($id)
 {
