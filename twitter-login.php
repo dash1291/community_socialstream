@@ -126,12 +126,20 @@ function deleteStatus($id,$ssid)
 	if(!is_admin($user)) return 0;
 	delete_status($id);
 }
-
+function send_email($subject,$text)
+{
+	global $admin_email;
+	$headers="From: SocialStream<socialstream@".$_SERVER['HTTP_HOST'].">";
+	if($admin_email!='') mail($admin_email,$subject,$text,$headers);
+}
 function createStatus($status_text,$ssid)
 {
 	global $api_key,$api_secret,$admin_token,$token_secret,$user;
 	if($ssid!=session_id()) return 0;
 	create_status_entry($status_text,$user->twitter_id);
+	$subject="Moderation Required";
+	$text=$twitter->screen_name." shared a status message. Please log in to either publish or delete the status";
+	send_email($subject,$text);
 }
 
 function AuthRedirect()

@@ -26,11 +26,12 @@ $db_name=$_POST['db_name'];
 $api_key=$_POST['api_key'];
 $api_secret=$_POST['api_secret'];
 $url=$_POST['url'];
+$email=$_POST['email'];
 $conf_file=dirname(__FILE__).'/config.php';
 //config file writeup
 
 $config=@fopen($conf_file,"w");
-$data='<?php $db_pass="'.$db_pass.'";$db_user="'.$db_user.'";$db_host="'.$db_host.'";$db_name="'.$db_name.'";$api_key="'.$api_key.'";$api_secret="'.$api_secret.'";$url="'.$url.'";?>';
+$data='<?php $db_pass="'.$db_pass.'";$db_user="'.$db_user.'";$db_host="'.$db_host.'";$db_name="'.$db_name.'";$api_key="'.$api_key.'";$api_secret="'.$api_secret.'";$url="'.$url.'";$admin_email="'.$email.'";?>';
 if(!$config)
 {
 	echo '<h3>Cannot write config file</h3>';
@@ -103,6 +104,10 @@ else
 		<div class="input">
 			<label for="url">Application URL</label>
 			<input style="margin-left:20px" type="text" size="20" name="url"/>
+		</div>
+		<div class="input">
+			<label for="url">Email</label>
+			<input style="margin-left:20px" type="text" size="20" name="email"/>
 		</div>
 		<div class="input">
 			<input style="margin-left:150px" type="submit" class="btn primary" value="Done"/>
